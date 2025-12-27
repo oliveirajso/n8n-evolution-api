@@ -1,6 +1,6 @@
 services:
   n8n:
-    image: n8nio/n8n:1.85.4
+    image: n8nio/n8n:2.1.1
     container_name: n8n
     restart: unless-stopped
     ports:
@@ -17,7 +17,7 @@ services:
     container_name: postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5432"
     env_file:
       - .env
     volumes:
@@ -42,7 +42,7 @@ services:
 
   evolution-api:
     container_name: lab_evolution_api
-    image: atendai/evolution-api:v2.2.3
+    image: evoapicloud/evolution-api:v2.3.6
     restart: always
     ports:
       - 8080:8080
@@ -53,22 +53,29 @@ services:
     networks:
       - minha_rede
 
-  ngrok:
-    image: ngrok/ngrok:latest # Usa a imagem oficial do ngrok com a tag "latest" para a versão mais recente
-    container_name: ngrok
+  zrok:
+    image: openziti/zrok
+    container_name: zrok
     restart: unless-stopped
-    ports:
-      - "4040:4040" # Porta para acessar a interface web do ngrok
+    volumes:
+      - ./.zrok:/home/ziggy/.zrok
     env_file:
-      - .env # Arquivo de variáveis de ambiente (certifique-se de incluir NGROK_AUTH_TOKEN se necessário)
-    depends_on:
-      - n8n # Mantém a dependência do serviço n8n
+      - .env
+    command: share reserved ${ZROK_N8N_TOKEN} --headless
     networks:
       - minha_rede
-    command:
-      - http
-      - --domain=viable-proud-tomcat.ngrok-free.app # Domínio personalizado do ngrok
-      - n8n:5678 # Aponta para o serviço n8n na porta 5678
+
+  zrok-evolution:
+    image: openziti/zrok
+    container_name: zrok_evolution
+    restart: unless-stopped
+    volumes:
+      - ./.zrok:/home/ziggy/.zrok
+    env_file:
+      - .env
+    command: share reserved ${ZROK_EVOLUTION_TOKEN} --headless
+    networks:
+      - minha_rede
 
   redis:
     image: redis:alpine
@@ -89,16 +96,16 @@ services:
     networks:
       - minha_rede
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - minha_rede
+#  ollama:
+#    image: ollama/ollama:latest
+#    container_name: ollama
+#    restart: unless-stopped
+#    ports:
+#      - "11434:11434"
+#    volumes:
+#      - ollama_data:/root/.ollama
+#    networks:
+#      - minha_rede
 
 volumes:
   n8n_data:

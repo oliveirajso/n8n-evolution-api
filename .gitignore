@@ -3,3 +3,4 @@ docker-compose.yml
 .continuerules
 ngrok.yml
 .docker-compose
+.zrok/

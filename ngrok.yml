@@ -1,9 +1,0 @@
-version: "2"
-authtoken: SEU_AUTH_TOKEN_NGROK
-tunnels:
-  n8n:
-    proto: http
-    addr: n8n:5678
-  evolution-api:
-    proto: http
-    addr: evolution-api:8080

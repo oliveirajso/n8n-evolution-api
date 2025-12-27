@@ -9,7 +9,7 @@ Os seguintes serviços são definidos no `docker-compose.yml`:
 - **n8n:** Plataforma de automação de workflows.
 - **Postgres:** Banco de dados PostgreSQL com extensão pgvector para funcionalidades vetoriais.
 - **Evolution API:** API para integração com plataformas de mensagens.
-- **Ngrok:** Cria túneis seguros para expor o n8n para a internet (útil para webhooks).
+- **zrok:** Alternativa open-source ao ngrok para criar túneis públicos seguros para o n8n e Evolution API.
 - **Redis:** Banco de dados em memória para cache, utilizado pela Evolution API.
 - **Adminer:** Interface web para administração do banco de dados Postgres.
 - **Ollama:** Ferramenta para executar e gerenciar modelos de linguagem grandes (LLMs) localmente.
@@ -54,7 +54,7 @@ Os seguintes serviços são definidos no `docker-compose.yml`:
       - `DB_POSTGRESDB_HOST`: Host do banco de dados Postgres (deve ser `postgres`).
       - `DB_POSTGRESDB_PORT`: Porta do Postgres (geralmente 5432).
       - `DB_POSTGRESDB_USER`, `DB_POSTGRESDB_PASSWORD`, `DB_POSTGRESDB_DATABASE`: Valores correspondentes do Postgres.
-      - `WEBHOOK_URL`: URL base para webhooks do n8n (geralmente o endereço do ngrok).
+      - `WEBHOOK_URL`: URL pública fixa do zrok para o n8n (ex: `https://seu-nome-n8n.share.zrok.io`).
     - **Evolution API:**
       - `AUTHENTICATION_API_KEY`: Chave de API para autenticação na Evolution API.
       - `DATABASE_ENABLED`: Habilita a conexão com o banco de dados ( `true` ou `false`).
@@ -73,12 +73,37 @@ Os seguintes serviços são definidos no `docker-compose.yml`:
       - `CACHE_REDIS_URI`: URI de conexão com o Redis.
       - `CACHE_REDIS_PREFIX_KEY`: Prefixo para as chaves do cache Redis.
       - `CACHE_REDIS_SAVE_INSTANCES`: Salvar instâncias no cache Redis ( `true` ou `false`).
-    - **Ngrok:**
-      - `NGROK_PROTOCOL`: Protocolo a ser utilizado (geralmente `http`).
-      - `NGROK_PORT`: Porta do serviço a ser exposto (deve ser `n8n:5678`).
-      - `NGROK_AUTHTOKEN`: Seu token de autenticação do Ngrok (necessário para usar domínios personalizados).
+    - **zrok (Túneis Públicos):**
+      - `PFXLOG_NO_JSON`: Configurar como `true` para logs mais limpos.
+      - `ZROK_AUTHTOKEN`: Seu token de conta mestre do zrok (obtido em zrok.io).
+      - `ZROK_N8N_TOKEN`: Token reservado para a URL fixa do n8n (ex: `jeffersonn8n`).
+      - `ZROK_EVOLUTION_TOKEN`: Token reservado para a URL fixa da Evolution API (ex: `jeffersonevolution`).
 
-4.  **Inicialize os serviços:**
+4.  **Configuração Inicial do zrok (Primeira Vez):**
+
+    Antes de subir todos os serviços, você precisa autenticar o zrok e reservar suas URLs fixas.
+
+    a. **Habilite seu ambiente zrok:**
+       Obtenha seu `Account Token` em [zrok.io](https://zrok.io) e execute:
+       ```bash
+       docker compose run --rm zrok enable <SEU_ACCOUNT_TOKEN>
+       ```
+
+    b. **Reserve suas URLs públicas:**
+       Escolha nomes únicos para seus serviços (ex: `meu-n8n`, `minha-evolution`).
+       *Para o n8n:*
+       ```bash
+       docker compose run --rm zrok reserve public http://n8n:5678 --unique-name <NOME_ESCOLHIDO_N8N>
+       ```
+       *Para a Evolution API:*
+       ```bash
+       docker compose run --rm zrok reserve public http://evolution-api:8080 --unique-name <NOME_ESCOLHIDO_EVOLUTION>
+       ```
+
+    c. **Atualize o `.env`:**
+       Copie os tokens retornados nos comandos acima (que serão iguais aos nomes escolhidos) e atualize as variáveis `ZROK_N8N_TOKEN` e `ZROK_EVOLUTION_TOKEN` no seu arquivo `.env`.
+
+5.  **Inicialize os serviços:**
 
     ```bash
     docker-compose up -d
@@ -88,17 +113,20 @@ Os seguintes serviços são definidos no `docker-compose.yml`:
 
 ## Acesso aos Serviços
 
-- **n8n:** Acesse a interface web em `http://localhost:5678`. Use as credenciais definidas em `.env` ( `N8N_BASIC_AUTH_USER` e `N8N_BASIC_AUTH_PASSWORD`).
+- **n8n:**
+  - Local: `http://localhost:5678`
+  - Público (zrok): `https://<ZROK_N8N_TOKEN>.share.zrok.io`
 - **Postgres:** O banco de dados estará disponível na porta 5432. Você pode usar o Adminer para gerenciá-lo.
 - **Adminer:** Acesse em `http://localhost:8081`. Conecte-se ao Postgres usando as credenciais definidas no `.env`.
-- **Evolution API:** Acesse a API em `http://localhost:8080`.
-- **Ngrok:** A interface web do ngrok estará disponível em `http://localhost:4040`. A URL pública gerada pelo ngrok (ex: `https://viable-proud-tomcat.ngrok-free.app`) deve ser definida na variável `WEBHOOK_URL` no arquivo `.env`.
+- **Evolution API:**
+  - Local: `http://localhost:8080`
+  - Público (zrok): `https://<ZROK_EVOLUTION_TOKEN>.share.zrok.io`
 - **Ollama:** Acesse a API na porta 11434. Consulte a documentação do Ollama para instruções sobre como usar a API.
 - **Redis:** O redis estará disponível na porta 6380.
 
 ## Notas
 
-- **Ngrok:** Para usar um domínio personalizado com o Ngrok, você precisa de uma conta paga e configurar o `NGROK_AUTHTOKEN` no arquivo `.env`.
+- **zrok:** O projeto utiliza o [zrok.io](https://zrok.io) para expor os serviços. As URLs são fixas graças ao uso de "Reserved Shares" definidos nos tokens do arquivo `.env`.
 - **Volumes:** Os dados do n8n e do Postgres são armazenados em volumes Docker (`n8n_data` e `postgres_data`), para que não sejam perdidos ao reiniciar os contêineres.
 - **Rede:** Todos os contêineres estão na mesma rede Docker (`minha_rede`), o que permite que eles se comuniquem entre si usando seus nomes de serviço (ex: `postgres`, `n8n`).
 
