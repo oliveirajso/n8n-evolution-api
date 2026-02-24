@@ -4,3 +4,4 @@ docker-compose.yml
 ngrok.yml
 .docker-compose
 .zrok/
+docker_data/

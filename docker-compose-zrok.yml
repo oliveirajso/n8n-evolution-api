@@ -1,0 +1,81 @@
+services:
+  n8n:
+    image: n8nio/n8n:2.9.1
+    container_name: n8n
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./docker_data/n8n:/home/node/.n8n
+    networks:
+      - minha_rede
+
+  evolution-api:
+    container_name: evolution_api
+    image: evoapicloud/evolution-api:v2.3.6
+    restart: always
+    volumes:
+      - ./docker_data/evolution_instances:/lab_evolution/instances
+    env_file:
+      - .env
+    networks:
+      - minha_rede
+
+  zrok:
+    image: openziti/zrok:1.1.11
+    container_name: zrok
+    restart: unless-stopped
+    volumes:
+      - ./.zrok:/home/ziggy/.zrok
+    env_file:
+      - .env
+    command: enable ${ZROK_AUTHTOKEN}
+    networks:
+      - minha_rede
+
+  # ZROK v2 — N8N
+  zrok-n8n:
+    image: openziti/zrok:1.1.11
+    container_name: zrok_n8n
+    depends_on:
+      - zrok
+      - n8n
+    restart: unless-stopped
+    volumes:
+      - ./.zrok:/home/ziggy/.zrok
+    command: share reserved n8n-jefferson
+    networks:
+      - minha_rede
+
+  # ZROK v2 — EVOLUTION
+  zrok-evolution:
+    image: openziti/zrok:1.1.11
+    container_name: zrok_evolution
+    depends_on:
+      - evolution-api
+    restart: unless-stopped
+    volumes:
+      - ./.zrok:/home/ziggy/.zrok
+    command: share reserved evolution-jefferson
+    networks:
+      - minha_rede
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    #command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-redis123}"] 
+    ports:
+      - "6380:6379"
+    networks:
+      - minha_rede
+    healthcheck:
+      #test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  minha_rede:
+    driver: bridge

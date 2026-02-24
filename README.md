@@ -136,3 +136,61 @@ Os seguintes serviços são definidos no `docker-compose.yml`:
 - Comece a criar workflows no n8n para automatizar suas tarefas.
 - Integre a Evolution API com seus fluxos de trabalho para enviar e receber mensagens.
 - Utilize o Ollama para adicionar funcionalidades de IA aos seus projetos.
+
+## comandos zrok
+
+Rodar uma vez
+docker run --rm -it \
+  --user ziggy \
+  -v $(pwd)/.zrok:/home/ziggy/.zrok \
+  openziti/zrok:1.1.11 enable ${ZROK_AUTHTOKEN}$
+
+
+docker run --rm -it \
+  --user root \
+  -v $(pwd)/.zrok:/home/ziggy/.zrok \
+  openziti/zrok:1.1.11 enable iEhSMQAWrAqJ && reserve public http://n8n:5678 --unique-name jeffersonn8n
+
+docker run --rm -it \
+  --user root \
+  -v $(pwd)/.zrok:/home/ziggy/.zrok \
+  openziti/zrok:1.1.11  reserve public http://n8n:5678 --unique-name jeffersonn8n
+
+
+
+
+ docker compose run --rm zrok enable xGZyqYDXcnfn
+ docker compose run --rm zrok disable
+ docker compose run --rm zrok reserve public http://n8n:5678 --unique-name jeffersonn8n
+ docker compose run --rm zrok reserve public http://evolution-api:8080 --unique-name jeffersonevolution
+ 
+ lyv6krrZw1GL
+#Ordem de execucao
+
+docker run --rm -it \ 
+--user root \
+ -v $(pwd)/.zrok:/home/ziggy/.zrok \
+ openziti/zrok:1.1.11 enable iEhSMQAWrAqJ
+
+sudo chown -R 1000:1000 .zrok 
+chmod -R 755 .zrok
+
+
+docker run --rm -it \                                                                                                                   1 ↵  1631  14:30:43
+  -v $(pwd)/.zrok:/home/ziggy/.zrok \
+  openziti/zrok:1.1.11 reserve public http://n8n:5678
+
+docker compose run --rm -it -v $(pwd)/.zrok:/home/ziggy/.zrok zrok reserve public http://n8n:5678
+docker compose run --rm -it -v $(pwd)/.zrok:/home/ziggy/.zrok zrok reserve --unique-name jeffersonevolution public http://evolution-api:8080
+
+
+  docker compose run --rm -it -v $(pwd)/.zrok:/home/ziggy/.zrok openziti/zrok:1.1.11 reserve public http://evolution-api:8080 --unique-name jeffersonevolution
+
+
+
+
+  ------
+docker run --rm -it \
+  --user root \
+  -v $(pwd)/.zrok:/home/ziggy/.zrok \
+  openziti/zrok enable lyv6krrZw1GL
