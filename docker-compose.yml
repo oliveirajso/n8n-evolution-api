@@ -7,8 +7,6 @@ services:
       - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
     networks:
       - minha_rede
-
-
   postgres:
     image: ankane/pgvector
     container_name: postgres
@@ -20,7 +18,7 @@ services:
     networks:
       - minha_rede
   n8n:
-    image: n8nio/n8n:2.9.1
+    image: n8nio/n8n:2.11.0
     container_name: n8n
     restart: unless-stopped
     env_file:
@@ -29,10 +27,9 @@ services:
       - ./docker_data/n8n:/home/node/.n8n
     networks:
       - minha_rede
-
   evolution-api:
     container_name: evolution_api
-    image: evoapicloud/evolution-api:v2.3.6
+    image: evoapicloud/evolution-api:v2.3.7
     restart: always
     volumes:
       - ./docker_data/evolution_instances:/lab_evolution/instances
@@ -40,7 +37,6 @@ services:
       - .env
     networks:
       - minha_rede
-
   redis:
     image: redis:alpine
     container_name: redis
@@ -56,6 +52,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  proxy-evolution:
+    image: vimagick/tinyproxy
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./docker_data/tinyproxy:/etc/tinyproxy
+    restart: unless-stopped
+
 
 networks:
   minha_rede:
