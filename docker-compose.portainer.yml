@@ -1,0 +1,74 @@
+services:
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run
+    restart: unless-stopped
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
+    networks:
+      - minha_rede
+
+  postgres:
+    image: ankane/pgvector
+    restart: unless-stopped
+    env_file:
+      - /opt/apps/n8n-evolution-api/.env
+    volumes:
+      - /opt/apps/n8n-evolution-api/postgres:/var/lib/postgresql/data
+    networks:
+      - minha_rede
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    networks:
+      - minha_rede
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:2.11.0
+    restart: unless-stopped
+    env_file:
+      - /opt/apps/n8n-evolution-api/.env
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - /opt/apps/n8n-evolution-api/n8n:/home/node/.n8n
+    networks:
+      - minha_rede
+
+  evolution-api:
+    image: evoapicloud/evolution-api:v2.3.7
+    restart: unless-stopped
+    env_file:
+      - /opt/apps/n8n-evolution-api/.env
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - /opt/apps/n8n-evolution-api/evolution:/lab_evolution/instances
+    networks:
+      - minha_rede
+
+  proxy-evolution:
+    image: vimagick/tinyproxy
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    volumes:
+      - /opt/apps/n8n-evolution-api/tinyproxy:/etc/tinyproxy
+    networks:
+      - minha_rede
+
+
+networks:
+  minha_rede:
+    driver: bridge
