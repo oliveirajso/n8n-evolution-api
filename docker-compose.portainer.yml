@@ -12,8 +12,6 @@ services:
   postgres:
     image: ankane/pgvector
     restart: unless-stopped
-    env_file:
-      - /opt/apps/n8n-evolution-api/.env
     volumes:
       - /opt/apps/n8n-evolution-api/postgres:/var/lib/postgresql/data
     networks:
@@ -35,8 +33,6 @@ services:
   n8n:
     image: n8nio/n8n:2.11.0
     restart: unless-stopped
-    env_file:
-      - /opt/apps/n8n-evolution-api/.env
     depends_on:
       - postgres
       - redis
@@ -48,8 +44,6 @@ services:
   evolution-api:
     image: evoapicloud/evolution-api:v2.3.7
     restart: unless-stopped
-    env_file:
-      - /opt/apps/n8n-evolution-api/.env
     depends_on:
       - redis
       - postgres
